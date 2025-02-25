@@ -35,6 +35,7 @@ router.get('/all', async (req, res) => {
 // 	await theCollection.save()
 // 	return theCollection._id
 // }
+
 router.post('/add', async (req, res) => {
 	const { content_front, content_back, collections = [] } = req.body
 	const handleCollection = async (collection, newCard) => {
@@ -82,7 +83,8 @@ router.post('/:id/update', async (req, res) => {
 		const oldCollectionsIds = foundCard.collections
 		const newCollectionsIds = newCollectionsArr.map((elem) => elem._id)
 
-		const collectionIdsToRemove = oldCollectionsIds.filter((elem) => !new Set(newCollectionsIds).has(elem._id))
+		// generate a list of IDs that were in old but are no longer in new
+		const collectionIdsToRemove = oldCollectionsIds.filter((elem) => !new Set(newCollectionsIds).has(elem._id.toString()))
 
 		foundCard.content_front = content_front
 		foundCard.content_back = content_back
