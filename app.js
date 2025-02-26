@@ -27,8 +27,8 @@ app.use('/auth', authRoutes)
 const cardsRoutes = require('./routes/cards.routes')
 app.use('/cards', cardsRoutes)
 
-const collectionsRoutes = require('./routes/collections.routes')
-app.use('/collections', collectionsRoutes)
+const tagsRoutes = require('./routes/tags.routes')
+app.use('/tags', tagsRoutes)
 
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require('./error-handling')(app)

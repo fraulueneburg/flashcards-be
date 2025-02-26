@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const CollectionsSchema = new mongoose.Schema({
+const TagsSchema = new mongoose.Schema({
 	name: {
 		type: String,
 		required: true,
@@ -21,4 +21,4 @@ const CollectionsSchema = new mongoose.Schema({
 	},
 })
 
-module.exports = mongoose.model('Collections', CollectionsSchema)
+module.exports = mongoose.model('Tags', TagsSchema)
