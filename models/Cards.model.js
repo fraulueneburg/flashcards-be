@@ -12,8 +12,10 @@ const CardsSchema = new mongoose.Schema({
 	createdAt: { type: Date, default: Date.now },
 	statistics: {
 		dueDate: { type: Date, default: Date.now },
-		guessesTotal: { type: Number, default: 0 },
-		guessesCorrect: { type: Number, default: 0 },
+		guesses: {
+			total: { type: Number, default: 0 },
+			correct: { type: Number, default: 0 },
+		},
 	},
 })
 
