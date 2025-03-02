@@ -4,9 +4,6 @@ const router = express.Router()
 const Cards = require('../models/Cards.model')
 const Tags = require('../models/Tags.model')
 
-// router.get('/all', isAuthenticated, async (req, res) => {
-// const userId = req.payload._id
-
 router.get('/all', async (req, res) => {
 	try {
 		const foundCardsArr = await Cards.find().populate({ path: 'tags', select: '-cards' })
@@ -19,22 +16,6 @@ router.get('/all', async (req, res) => {
 
 // add card to existing tag
 // or create a new one
-
-// const handleTag = async (tag, newCard) => {
-// 	let theTag
-// 	let foundTag = await Tags.findById(tag._id)
-
-// 	foundTag
-// 		? (theTag = foundTag)
-// 		: (theTag = await Tags.create({
-// 				name: tag.name,
-// 				color: tag.color,
-// 				cards: [],
-// 		  }))
-// 	theTag.cards.push(newCard._id)
-// 	await theTag.save()
-// 	return theTag._id
-// }
 
 router.post('/add', async (req, res) => {
 	const { content_front, content_back, tags = [] } = req.body
@@ -137,6 +118,39 @@ router.post('/:id/update', async (req, res) => {
 	} catch (error) {
 		console.error(error)
 		res.status(500).json({ message: 'Error while updating card.' })
+	}
+})
+
+router.post('/:id/answer/:rightOrWrong', async (req, res) => {
+	const { id, rightOrWrong } = req.params
+	try {
+		const foundCard = await Cards.findById(id)
+		if (!foundCard) return res.status(404).json({ message: 'Update Error: Card ID not found' })
+		const box = foundCard.box
+
+		if (rightOrWrong === 'right') {
+			const daysUntilNextReview = [2, 7, 14, 28, 28]
+
+			foundCard.difficult = false
+			foundCard.reviewDate = new Date(Date.now() + daysUntilNextReview[box - 1] * 86400000)
+			if (box < 5) {
+				foundCard.box += 1
+			} else {
+				foundCard.retired = true
+				foundCard.reviewDate = new Date(Date.now() + 365 * 100 * 86400000)
+			}
+		} else {
+			foundCard.difficult = true
+			foundCard.retired = false
+			foundCard.reviewDate = new Date()
+			foundCard.box = 1
+		}
+		foundCard.lastReviewDate = new Date()
+		await foundCard.save()
+		res.status(200).json(foundCard)
+	} catch (error) {
+		console.error(error)
+		res.status(500).json({ message: 'Error while handling card review.' })
 	}
 })
 
