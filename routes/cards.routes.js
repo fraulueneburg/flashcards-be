@@ -4,7 +4,7 @@ const router = express.Router()
 const Cards = require('../models/Cards.model')
 const Tags = require('../models/Tags.model')
 
-router.get('/all', async (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 		const foundCardsArr = await Cards.find().populate({ path: 'tags', select: '-cards' })
 		res.json(foundCardsArr)
@@ -14,10 +14,7 @@ router.get('/all', async (req, res) => {
 	}
 })
 
-// add card to existing tag
-// or create a new one
-
-router.post('/add', async (req, res) => {
+router.post('/', async (req, res) => {
 	const { content_front, content_back, tags = [] } = req.body
 
 	const handleTag = async (tag, newCard) => {
@@ -53,7 +50,7 @@ router.post('/add', async (req, res) => {
 	}
 })
 
-router.post('/:id/update', async (req, res) => {
+router.put('/:id', async (req, res) => {
 	const { id } = req.params
 	const { content_front, content_back, tags: newTagsArr } = req.body
 
@@ -62,21 +59,21 @@ router.post('/:id/update', async (req, res) => {
 		if (!foundCard) return res.status(404).json({ message: 'Update Error: Card ID not found' })
 
 		// prepare tags
-		const oldTagsIds = foundCard.tags
-		const newTagsIds = newTagsArr.map((elem) => elem._id)
+		const existingTagIds = foundCard.tags
+		const newTagIds = newTagsArr.map((elem) => elem._id)
 
-		// generate a list of IDs that were in old but are no longer in new
-		const tagIdsToRemove = oldTagsIds.filter((elem) => !new Set(newTagsIds).has(elem._id.toString()))
+		// list of IDs that were in old but are no longer in new
+		const tagIdsToRemove = existingTagIds.filter((elem) => !new Set(newTagIds).has(elem._id.toString()))
 
 		foundCard.content_front = content_front
 		foundCard.content_back = content_back
 		foundCard.tags = []
 		await foundCard.save()
 
-		// Process new tags
-		// exists with card      => leave as is
-		// exists without card   => link
-		// does not exist        => create new + link
+		// PROCESS NEW TAGS
+		// exists with card  ->  leave as is
+		// exists w/o card   ->  link
+		// does not exist    ->  create new + link
 		for (const tag of newTagsArr) {
 			const { name, color, _id } = tag
 			const isValidId = mongoose.Types.ObjectId.isValid(_id)
@@ -121,14 +118,16 @@ router.post('/:id/update', async (req, res) => {
 	}
 })
 
-router.post('/:id/answer/:rightOrWrong', async (req, res) => {
-	const { id, rightOrWrong } = req.params
+router.patch('/:id/review', async (req, res) => {
+	const { id } = req.params
+	const { isCorrectAnswer } = req.body
+
 	try {
 		const foundCard = await Cards.findById(id)
 		if (!foundCard) return res.status(404).json({ message: 'Update Error: Card ID not found' })
 		const box = foundCard.box
 
-		if (rightOrWrong === 'right') {
+		if (isCorrectAnswer === true) {
 			const daysUntilNextReview = [2, 7, 14, 28, 28]
 
 			foundCard.difficult = false
@@ -154,7 +153,7 @@ router.post('/:id/answer/:rightOrWrong', async (req, res) => {
 	}
 })
 
-router.delete('/:id/delete', async (req, res) => {
+router.delete('/:id', async (req, res) => {
 	const { id } = req.params
 	const foundCard = await Cards.findById(id)
 	const tagsArr = foundCard.tags
